@@ -28,8 +28,10 @@ class Books(APIView):
             "acquired": request.data.get("acquired"),
             "thumbnail": request.data.get("thumbnail")
         }
+        print(data["authors"])
         serializer = BookSerializer(data=data)
         if serializer.is_valid():
+            print(serializer.validated_data)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

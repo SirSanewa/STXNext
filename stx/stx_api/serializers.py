@@ -5,11 +5,11 @@ from .models import Book, Author
 class AuthorsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
-        fields = "full_name"
+        fields = ("full_name", )
 
 
 class BookSerializer(serializers.ModelSerializer):
-    authors = AuthorsSerializer(read_only=True, many=True)
+    authors = AuthorsSerializer(many=True, read_only=True)
 
     class Meta:
         model = Book
