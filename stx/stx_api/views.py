@@ -1,10 +1,11 @@
-from django.http import QueryDict
-from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
+from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.views import Response
 from rest_framework import status
 from .serializers import BookReadSerializer, BookWriteSerializer
-from .models import Book, Author
+from .models import Book
 from .filter import BookFilter
 
 API_VERSION_DATE = "2022.05.16"
@@ -50,10 +51,28 @@ class Books(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         if book_id:
-            book = Book.objects.get(id=book_id)
+            try:
+                book = Book.objects.get(id=book_id)
+            except ObjectDoesNotExist:
+                raise Http404
             serializer = BookReadSerializer(book)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             books = Book.objects.all()
             serializer = BookReadSerializer(books, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, book_id=None):
+        if book_id:
+            book = get_object_or_404(Book.objects.all(), id=book_id)
+            book.delete()
+            return Response(
+                {
+                    "result": f"Book id:{book_id} removed"
+                },
+                status=status.HTTP_202_ACCEPTED)
+        return Response(
+            {
+                "No book id provided"
+            },
+            status=status.HTTP_400_BAD_REQUEST)
