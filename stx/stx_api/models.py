@@ -5,7 +5,7 @@ class Book(models.Model):
     external_id = models.IntegerField(null=True)
     title = models.CharField(max_length=400)
     authors = models.ManyToManyField("Author")
-    published_year = models.IntegerField()
+    published_year = models.IntegerField(null=True)
     acquired = models.BooleanField()
     thumbnail = models.CharField(null=True, max_length=600)
 

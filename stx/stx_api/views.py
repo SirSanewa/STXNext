@@ -7,6 +7,7 @@ from rest_framework import status
 from .serializers import BookReadSerializer, BookWriteSerializer
 from .models import Book
 from .filter import BookFilter
+import requests
 
 API_VERSION_DATE = "2022.05.16"
 
@@ -18,6 +19,8 @@ def clear_query_dict(query_dict):
     :return: query_dict:
     """
     query_dict_copy = query_dict.copy()
+    query_dict_copy["from_date"] = query_dict_copy.pop("from").pop()
+    query_dict_copy["to_date"] = query_dict_copy.pop("to").pop()
     query_dict_copy["author"] = query_dict_copy["author"].strip('"')
     return query_dict_copy
 
@@ -76,3 +79,37 @@ class Books(APIView):
                 "No book id provided"
             },
             status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, book_id=None):
+        try:
+            book = Book.objects.get(id=book_id)
+        except ObjectDoesNotExist:
+            raise Http404
+        serializer_write = BookWriteSerializer(book, data=request.data, partial=True)
+        if serializer_write.is_valid():
+            serializer_write.save()
+            serializer_read = BookReadSerializer(book)
+            return Response(serializer_read.data, status=status.HTTP_200_OK)
+        return Response(serializer_write.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ImportBooks(APIView):
+    def post(self, request):
+        author_name = self.request.data["author"]
+        api_response = requests.get(f"https://www.googleapis.com/books/v1/volumes?q={author_name}")
+        import_amount = len(api_response.json()["items"])
+
+        for book in api_response.json()["items"]:
+            data = {
+                "external_id": book["id"],
+                "title": book["volumeInfo"]["title"],
+                "authors": book["volumeInfo"].get("authors", []),
+                # dokończyc co, co jeśli nie ma daty, model zmieniony na akceptacje Null, zmienic kod
+                "published_year": book["volumeInfo"]["publishedDate"].split("-")[0],
+                "acquired": False,
+                "thumbnail": book["volumeInfo"]["infoLink"]
+            }
+            print(data)
+            # serializer = BookWriteSerializer(data=data)
+            # if serializer.is_valid():
+            #     serializer.save()
