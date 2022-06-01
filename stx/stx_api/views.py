@@ -7,7 +7,7 @@ from rest_framework import status
 from .serializers import BookReadSerializer, BookWriteSerializer
 from .models import Book
 from .filter import BookFilter
-import requests
+from .utils import data_from_api
 
 API_VERSION_DATE = "2022.05.16"
 
@@ -95,21 +95,29 @@ class Books(APIView):
 
 class ImportBooks(APIView):
     def post(self, request):
-        author_name = self.request.data["author"]
-        api_response = requests.get(f"https://www.googleapis.com/books/v1/volumes?q={author_name}")
-        import_amount = len(api_response.json()["items"])
+        author_name = request.data["author"]
 
-        for book in api_response.json()["items"]:
-            data = {
-                "external_id": book["id"],
-                "title": book["volumeInfo"]["title"],
-                "authors": book["volumeInfo"].get("authors", []),
-                # dokończyc co, co jeśli nie ma daty, model zmieniony na akceptacje Null, zmienic kod
-                "published_year": book["volumeInfo"]["publishedDate"].split("-")[0],
-                "acquired": False,
-                "thumbnail": book["volumeInfo"]["infoLink"]
-            }
-            print(data)
-            # serializer = BookWriteSerializer(data=data)
+        try:
+            data, import_amount = data_from_api(author_name)
+        except TypeError:
+            return Response(
+                {
+                    "response": "Unable to perform action"
+                },
+                status=status.HTTP_400_BAD_REQUEST)
+        for book_data in data:
+            try:
+                book = Book.objects.get(external_id=book_data["external_id"])
+                # # print("ex_id", book.external_id, "title", book.title, "authors", book.authors, "acquired", book.acquired, "thumbnail", book.thumbnail, "published", book.published_year)
+                # # print("data", book_data)
+                serializer = BookWriteSerializer(book, data=book_data, partial=True)
+            except ObjectDoesNotExist:
+                serializer = BookWriteSerializer(data=book_data)
+            if serializer.is_valid():
+                serializer.save()
+            #
+            # book, _ = Book.objects.update_or_create(external_id=book_data["external_id"])
+            #
+            # serializer = BookWriteSerializer(book, data=book_data, partial=True)
             # if serializer.is_valid():
             #     serializer.save()
