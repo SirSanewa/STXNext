@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-txujj8ukd6ihbfn61r-ezkk_2%3ivpjtmsff+i%%*3mu2&osqn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [" https://stormy-caverns-47766.herokuapp.com"]
+ALLOWED_HOSTS = []
 
 
 # Application definition
