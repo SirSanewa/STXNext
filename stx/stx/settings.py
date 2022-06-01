@@ -80,8 +80,12 @@ WSGI_APPLICATION = 'stx.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postsql',
+        'NAME': None,
+        'USER': os.environ["POSTGRES_USER"],
+        'PASSWORD': os.environ["POSTGRES_PASSWORD"],
+        'HOST': os.environ["POSTGRES_HOST"],
+        'PORT': os.environ["POSTGRES_PORT"]
     }
 }
 
