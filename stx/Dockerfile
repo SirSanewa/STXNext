@@ -29,5 +29,5 @@ RUN pip install -r ./requirements.txt
 VOLUME /static
 
 EXPOSE $PORT
-CMD gunicorn --bind 0.0.0.0:$PORT ng.wsgi
+CMD gunicorn --bind 0.0.0.0:$PORT stx.wsgi
 #CMD exec gunicorn ng.wsgi:application - --bind 0.0.0.0:8000
