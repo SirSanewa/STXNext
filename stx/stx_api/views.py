@@ -115,9 +115,13 @@ class ImportBooks(APIView):
                 serializer = BookWriteSerializer(data=book_data)
             if serializer.is_valid():
                 serializer.save()
-            #
-            # book, _ = Book.objects.update_or_create(external_id=book_data["external_id"])
-            #
-            # serializer = BookWriteSerializer(book, data=book_data, partial=True)
-            # if serializer.is_valid():
-            #     serializer.save()
+
+        #     book, _ = Book.objects.get_or_create(external_id=book_data["external_id"])
+        #     serializer = BookWriteSerializer(book, data=book_data, partial=True)
+        #     if serializer.is_valid():
+        #         serializer.save()
+        # return Response(
+        #     {
+        #         "import done"
+        #     },
+        #     status=status.HTTP_202_ACCEPTED)

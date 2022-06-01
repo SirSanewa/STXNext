@@ -6,7 +6,7 @@ class Book(models.Model):
     title = models.CharField(max_length=400)
     authors = models.ManyToManyField("Author")
     published_year = models.IntegerField(null=True)
-    acquired = models.BooleanField()
+    acquired = models.BooleanField(default=False)
     thumbnail = models.CharField(null=True, max_length=600)
 
     class Meta:

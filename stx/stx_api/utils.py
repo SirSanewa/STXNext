@@ -20,7 +20,6 @@ def data_from_api(author_name):
             "title": book["volumeInfo"]["title"],
             "authors": book["volumeInfo"].get("authors", []),
             "published_year": year,
-            "acquired": False,
             "thumbnail": book["volumeInfo"]["infoLink"]
         }
         dict_list.append(data)
