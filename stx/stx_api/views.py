@@ -14,7 +14,8 @@ API_VERSION_DATE = "2022.05.16"
 
 def clear_query_dict(query_dict):
     """
-    Strips values of "" in author's list.
+    Create copy of given querydict, remove '"' symbols from author's name, change querydict's params 'from' and 'to' to
+    the once not causing potential keywords overide.
     :param query_dict:
     :return: query_dict:
     """
@@ -27,6 +28,11 @@ def clear_query_dict(query_dict):
 
 class ApiSpec(APIView):
     def get(self, request):
+        """
+        Return api version data.
+        :param request:
+        :return:
+        """
         return Response(
             {
                 "info": {
@@ -38,6 +44,11 @@ class ApiSpec(APIView):
 
 class Books(APIView):
     def post(self, request):
+        """
+        Create new book in bd from given request.data.
+        :param request:
+        :return:
+        """
         serializer_write = BookWriteSerializer(data=request.data)
 
         if serializer_write.is_valid():
@@ -47,6 +58,15 @@ class Books(APIView):
         return Response(serializer_write.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, book_id=None):
+        """
+        Return book details from db in 3 scenarios.
+        1. return all books if no querryparams are given,
+        2. return specific book if book_id passed in url(default book_id set as None)
+        3. return specific books for all querryparams given
+        :param request:
+        :param book_id: int
+        :return:
+        """
         if request.GET:
             cleared_query_dict = clear_query_dict(request.GET)
             f = BookFilter(cleared_query_dict, queryset=Book.objects.all())
@@ -66,6 +86,12 @@ class Books(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request, book_id=None):
+        """
+        Remove specific book from db by given book_id from url. Default book_id set as None.
+        :param request:
+        :param book_id: int
+        :return:
+        """
         if book_id:
             book = get_object_or_404(Book.objects.all(), id=book_id)
             book.delete()
@@ -81,6 +107,12 @@ class Books(APIView):
             status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, book_id=None):
+        """
+        Update specific book in db by given book_id from url. Any field to be updated excluding id.
+        :param request:
+        :param book_id: int
+        :return:
+        """
         try:
             book = Book.objects.get(id=book_id)
         except ObjectDoesNotExist:
@@ -95,6 +127,12 @@ class Books(APIView):
 
 class ImportBooks(APIView):
     def post(self, request):
+        """
+        Connect to Api with a use of data_from_api(). Update all books in db that match external_id or create new
+        objects.
+        :param request:
+        :return:
+        """
         author_name = request.data["author"]
 
         try:
@@ -106,22 +144,12 @@ class ImportBooks(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST)
         for book_data in data:
-            try:
-                book = Book.objects.get(external_id=book_data["external_id"])
-                # # print("ex_id", book.external_id, "title", book.title, "authors", book.authors, "acquired", book.acquired, "thumbnail", book.thumbnail, "published", book.published_year)
-                # # print("data", book_data)
-                serializer = BookWriteSerializer(book, data=book_data, partial=True)
-            except ObjectDoesNotExist:
-                serializer = BookWriteSerializer(data=book_data)
+            book, _ = Book.objects.get_or_create(external_id=book_data["external_id"])
+            serializer = BookWriteSerializer(book, data=book_data)
             if serializer.is_valid():
                 serializer.save()
-
-        #     book, _ = Book.objects.get_or_create(external_id=book_data["external_id"])
-        #     serializer = BookWriteSerializer(book, data=book_data, partial=True)
-        #     if serializer.is_valid():
-        #         serializer.save()
-        # return Response(
-        #     {
-        #         "import done"
-        #     },
-        #     status=status.HTTP_202_ACCEPTED)
+        return Response(
+            {
+                "imported": import_amount
+            },
+            status=status.HTTP_202_ACCEPTED)

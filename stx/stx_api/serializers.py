@@ -31,3 +31,15 @@ class BookWriteSerializer(serializers.ModelSerializer):
             new_book.authors.add(new_author)
 
         return new_book
+
+    def update(self, instance, validated_data):
+        if validated_data.get("authors"):
+            authors = validated_data.pop("authors")
+            instance.authors.clear()
+
+            for author_name in authors:
+                new_author, _ = Author.objects.get_or_create(fullname=author_name)
+                new_author.save()
+                instance.authors.add(new_author)
+
+        return super().update(instance, validated_data)

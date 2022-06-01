@@ -1,8 +1,12 @@
 import requests
-from .models import Book
 
 
-def data_from_api(author_name):
+def data_from_api(author_name: str):
+    """
+    Connect to the API server and get books data for given author name. Convert response data into list of dictionaries.
+    :param author_name: str
+    :return: dict_list: list, import_amount: int
+    """
     api_response = requests.get(f"https://www.googleapis.com/books/v1/volumes?q={author_name}")
     try:
         api_response.json()["items"]
@@ -20,6 +24,7 @@ def data_from_api(author_name):
             "title": book["volumeInfo"]["title"],
             "authors": book["volumeInfo"].get("authors", []),
             "published_year": year,
+            "acquired": False,
             "thumbnail": book["volumeInfo"]["infoLink"]
         }
         dict_list.append(data)
